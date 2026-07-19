@@ -20,20 +20,14 @@ public class APIResponse<T> {
     private Integer results;
     private T data;
 
-    /**
-     * - succes
-     * - fail
-     * - error
-     */
-
-    public static <T> APIResponse<T> success(T data){
+    public static <T> APIResponse<T> success(T data) {
         return APIResponse.<T>builder()
                 .status(APIResponseStatus.SUCCESS)
                 .data(data)
                 .build();
     }
 
-    public static <T extends Collection<?>> APIResponse<T> success(T data){
+    public static <T extends Collection<?>> APIResponse<T> success(T data) {
         return APIResponse.<T>builder()
                 .status(APIResponseStatus.SUCCESS)
                 .data(data)
@@ -41,7 +35,7 @@ public class APIResponse<T> {
                 .build();
     }
 
-    public static <T> APIResponse<T> fail(String message, Integer code){
+    public static <T> APIResponse<T> fail(String message, Integer code) {
         return APIResponse.<T>builder()
                 .status(APIResponseStatus.FAIL)
                 .message(message)
@@ -49,17 +43,26 @@ public class APIResponse<T> {
                 .build();
     }
 
-    public static <T> APIResponse<T> fail(T errors, String message, Integer code, Integer results){
+    public static <T> APIResponse<T> fail(T data, String message, Integer code) {
         return APIResponse.<T>builder()
                 .status(APIResponseStatus.FAIL)
                 .message(message)
                 .code(code)
-                .data(errors)
+                .data(data)
+                .build();
+    }
+
+    public static <T> APIResponse<T> fail(T data, String message, Integer code, Integer results) {
+        return APIResponse.<T>builder()
+                .status(APIResponseStatus.FAIL)
+                .message(message)
+                .code(code)
+                .data(data)
                 .results(results)
                 .build();
     }
 
-    public static <T> APIResponse<T> error(String message,Integer code){
+    public static <T> APIResponse<T> error(String message, Integer code) {
         return APIResponse.<T>builder()
                 .status(APIResponseStatus.ERROR)
                 .message(message)
@@ -67,12 +70,12 @@ public class APIResponse<T> {
                 .build();
     }
 
-    public static <T> APIResponse<T> error(T errors, String message,Integer code){
+    public static <T> APIResponse<T> error(T data, String message, Integer code) {
         return APIResponse.<T>builder()
                 .status(APIResponseStatus.ERROR)
                 .message(message)
                 .code(code)
-                .data(errors)
+                .data(data)
                 .build();
     }
 }
