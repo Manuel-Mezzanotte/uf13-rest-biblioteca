@@ -72,21 +72,115 @@
             </div>
         </header>
 
-        <div class="content-frame">
-            <div class="frame-header">
-                <span class="frame-title">Catalogo</span>
-                <span class="frame-meta">Gestione libri</span>
-            </div>
-            <div class="empty-state">
-                <span class="empty-state-icon" aria-hidden="true">
-                    <svg viewBox="0 0 32 32" focusable="false">
-                        <path d="M6 7.5h5v18H6zM13.5 5h5v20.5h-5zM21 8.5h5v17h-5z"/>
-                        <path d="M4 26h24"/>
-                    </svg>
-                </span>
-                <h2>Area catalogo</h2>
-                <p>Qui saranno disponibili elenco, ricerca e gestione dei libri.</p>
-            </div>
+        <div class="feedback-message" id="libri-feedback" role="status" aria-live="polite" hidden></div>
+
+        <div class="catalog-workspace catalog-workspace--books">
+            <section class="management-panel" aria-labelledby="libro-form-title">
+                <header class="panel-heading">
+                    <div>
+                        <h2 id="libro-form-title">Aggiungi libro</h2>
+                        <p>Inserisci i dati e associa un autore.</p>
+                    </div>
+                </header>
+
+                <form class="entity-form" id="libro-form">
+                    <label class="form-field">
+                        <span>ISBN</span>
+                        <input id="libro-isbn" name="isbn" type="text" maxlength="13"
+                               autocomplete="off" placeholder="9780000000000" required>
+                        <small class="field-error" data-error-for="isbn"></small>
+                    </label>
+
+                    <label class="form-field">
+                        <span>Titolo</span>
+                        <input id="libro-titolo" name="titolo" type="text" maxlength="50"
+                               autocomplete="off" placeholder="Titolo del libro" required>
+                        <small class="field-error" data-error-for="titolo"></small>
+                    </label>
+
+                    <div class="form-row">
+                        <label class="form-field">
+                            <span>Genere <span class="optional-label">facoltativo</span></span>
+                            <input id="libro-genere" name="genere" type="text"
+                                   autocomplete="off" placeholder="Narrativa">
+                            <small class="field-error" data-error-for="genere"></small>
+                        </label>
+
+                        <label class="form-field">
+                            <span>Anno <span class="optional-label">facoltativo</span></span>
+                            <input id="libro-anno" name="anno" type="number"
+                                   inputmode="numeric" placeholder="2026">
+                            <small class="field-error" data-error-for="anno"></small>
+                        </label>
+                    </div>
+
+                    <label class="form-field">
+                        <span>Autore</span>
+                        <select id="libro-autore" name="autore" required disabled>
+                            <option value="">Caricamento autori…</option>
+                        </select>
+                        <small class="field-error" data-error-for="autore"></small>
+                    </label>
+
+                    <p class="form-note" id="libro-autore-note" hidden>
+                        Per aggiungere un libro devi prima inserire almeno un autore.
+                    </p>
+
+                    <button class="button button--primary button--full" id="libro-submit" type="submit" disabled>
+                        Aggiungi libro
+                    </button>
+                </form>
+            </section>
+
+            <section class="management-panel management-panel--list" aria-labelledby="libri-list-title">
+                <header class="panel-heading panel-heading--list">
+                    <div>
+                        <h2 id="libri-list-title">Catalogo</h2>
+                        <p id="libri-count">Caricamento…</p>
+                    </div>
+
+                    <form class="search-form" id="libri-search-form" role="search">
+                        <label class="visually-hidden" for="libri-search-type">Cerca per</label>
+                        <select id="libri-search-type" name="tipo">
+                            <option value="titolo">Titolo</option>
+                            <option value="isbn">ISBN</option>
+                        </select>
+                        <label class="visually-hidden" for="libri-search-query">Testo da cercare</label>
+                        <input id="libri-search-query" name="query" type="search"
+                               autocomplete="off" placeholder="Titolo esatto" required>
+                        <button class="button button--secondary" type="submit">Cerca</button>
+                        <button class="button button--text" id="libri-search-reset" type="button" hidden>
+                            Tutti
+                        </button>
+                    </form>
+                </header>
+
+                <div class="table-wrapper" id="libri-table-wrapper" hidden>
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Libro</th>
+                            <th scope="col">ISBN</th>
+                            <th class="optional-column" scope="col">Dettagli</th>
+                            <th class="author-column" scope="col">Autore</th>
+                            <th class="actions-column" scope="col"><span class="visually-hidden">Azioni</span></th>
+                        </tr>
+                        </thead>
+                        <tbody id="libri-table-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="empty-state empty-state--compact" id="libri-empty">
+                    <span class="empty-state-icon" aria-hidden="true">
+                        <svg viewBox="0 0 32 32" focusable="false">
+                            <path d="M6 7.5h5v18H6zM13.5 5h5v20.5h-5zM21 8.5h5v17h-5z"/>
+                            <path d="M4 26h24"/>
+                        </svg>
+                    </span>
+                    <h3 id="libri-empty-title">Nessun libro presente</h3>
+                    <p id="libri-empty-copy">Aggiungi il primo libro usando il modulo.</p>
+                </div>
+            </section>
         </div>
     </section>
 
@@ -99,21 +193,70 @@
             </div>
         </header>
 
-        <div class="content-frame">
-            <div class="frame-header">
-                <span class="frame-title">Archivio autori</span>
-                <span class="frame-meta">Gestione autori</span>
-            </div>
-            <div class="empty-state">
-                <span class="empty-state-icon" aria-hidden="true">
-                    <svg viewBox="0 0 32 32" focusable="false">
-                        <circle cx="16" cy="11" r="5"/>
-                        <path d="M6.5 27a9.5 9.5 0 0 1 19 0"/>
-                    </svg>
-                </span>
-                <h2>Area autori</h2>
-                <p>Qui saranno disponibili elenco e gestione degli autori.</p>
-            </div>
+        <div class="feedback-message" id="autori-feedback" role="status" aria-live="polite" hidden></div>
+
+        <div class="catalog-workspace">
+            <section class="management-panel" aria-labelledby="autore-form-title">
+                <header class="panel-heading">
+                    <div>
+                        <h2 id="autore-form-title">Aggiungi autore</h2>
+                        <p>Registra una nuova persona nell’archivio.</p>
+                    </div>
+                </header>
+
+                <form class="entity-form" id="autore-form">
+                    <label class="form-field">
+                        <span>Nome</span>
+                        <input id="autore-nome" name="nome" type="text" maxlength="30"
+                               autocomplete="given-name" placeholder="Nome" required>
+                        <small class="field-error" data-error-for="nome"></small>
+                    </label>
+
+                    <label class="form-field">
+                        <span>Cognome</span>
+                        <input id="autore-cognome" name="cognome" type="text" maxlength="30"
+                               autocomplete="family-name" placeholder="Cognome" required>
+                        <small class="field-error" data-error-for="cognome"></small>
+                    </label>
+
+                    <button class="button button--primary button--full" type="submit">
+                        Aggiungi autore
+                    </button>
+                </form>
+            </section>
+
+            <section class="management-panel management-panel--list" aria-labelledby="autori-list-title">
+                <header class="panel-heading panel-heading--list">
+                    <div>
+                        <h2 id="autori-list-title">Archivio autori</h2>
+                        <p id="autori-count">Caricamento…</p>
+                    </div>
+                </header>
+
+                <div class="table-wrapper" id="autori-table-wrapper" hidden>
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Autore</th>
+                            <th scope="col">Identificativo</th>
+                            <th class="actions-column" scope="col"><span class="visually-hidden">Azioni</span></th>
+                        </tr>
+                        </thead>
+                        <tbody id="autori-table-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="empty-state empty-state--compact" id="autori-empty">
+                    <span class="empty-state-icon" aria-hidden="true">
+                        <svg viewBox="0 0 32 32" focusable="false">
+                            <circle cx="16" cy="11" r="5"/>
+                            <path d="M6.5 27a9.5 9.5 0 0 1 19 0"/>
+                        </svg>
+                    </span>
+                    <h3>Nessun autore presente</h3>
+                    <p>Aggiungi il primo autore usando il modulo.</p>
+                </div>
+            </section>
         </div>
     </section>
 </main>

@@ -1,3 +1,6 @@
+import { initAutori } from "./autori.js";
+import { initLibri } from "./libri.js";
+
 const tabs = [...document.querySelectorAll("[data-view]")];
 const panels = [...document.querySelectorAll("[data-view-panel]")];
 const apiStatus = document.querySelector("#api-status");
@@ -28,12 +31,12 @@ tabs.forEach((tab, index) => {
     tab.addEventListener("click", () => activateView(tab.dataset.view));
 
     tab.addEventListener("keydown", (event) => {
-        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) {
             return;
         }
 
         event.preventDefault();
-        const direction = event.key === 'ArrowRight' ? 1 : -1;
+        const direction = event.key === "ArrowRight" ? 1 : -1;
         const nextIndex = (index + direction + tabs.length) % tabs.length;
         tabs[nextIndex].focus();
         activateView(tabs[nextIndex].dataset.view);
@@ -66,3 +69,5 @@ async function checkApiHealth() {
 
 activateView(window.location.hash.slice(1), false);
 checkApiHealth();
+initAutori();
+initLibri();
