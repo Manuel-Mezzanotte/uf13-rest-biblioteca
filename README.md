@@ -21,6 +21,17 @@ L'interfaccia Swagger è disponibile al seguente indirizzo:
 http://localhost:8080/swagger-ui/index.html
 ```
 
+## Frontend web
+
+Il progetto include una semplice interfaccia per gestire libri e autori direttamente dal browser. Per avviare tutti i servizi:
+
+```bash
+cd biblioteca
+docker compose up -d --build
+```
+
+Il frontend è disponibile all'indirizzo `http://localhost:8080/` e permette di aggiungere, cercare ed eliminare libri e autori.
+
 ## Documentazione esame UF13
 
 La relazione tecnica è disponibile in [docs/relazione-tecnica.md](docs/relazione-tecnica.md).
