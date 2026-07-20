@@ -103,3 +103,44 @@ BUILD SUCCESS
 - Le query SQL sono tracciate durante lo sviluppo.
 - I log di produzione sono salvati sull'host e ruotano per tempo e dimensione.
 - Backend e database possono essere avviati insieme tramite Docker Compose.
+
+## Task 3 - Monitoraggio e alerting
+
+### Obiettivo
+
+Lo scopo della task era rendere visibili lo stato e le principali metriche dell'applicazione, aggiungendo anche un allarme automatico in caso di troppi errori HTTP 500.
+
+### Scelte progettuali
+
+Ho integrato Spring Boot Actuator e Micrometer per esporre le metriche nel formato Prometheus. Nel file `docker-compose.yaml` sono stati aggiunti Prometheus e Grafana, entrambi con healthcheck e volume persistente. Prometheus interroga l'endpoint `/actuator/prometheus` del backend ogni 15 secondi.
+
+Grafana viene configurato automaticamente tramite file di provisioning. Il datasource Prometheus e la dashboard `Biblioteca - JVM` sono quindi disponibili senza configurazioni manuali. La dashboard mostra stato del servizio, memoria heap, CPU, thread JVM, richieste HTTP e latenza media.
+
+La regola `Troppi errori HTTP 500` usa la seguente query PromQL:
+
+```promql
+sum(increase(http_server_requests_seconds_count{job="biblioteca", status="500"}[1m]))
+```
+
+La regola viene valutata ogni 10 secondi e passa allo stato `Firing` quando, nell'ultimo minuto, vengono registrati più di 10 errori. È inoltre collegata al pannello della dashboard dedicato agli stati HTTP.
+
+### Verifiche eseguite
+
+Con Docker Compose ho verificato lo stato `healthy` di MySQL, backend, Prometheus e Grafana. L'endpoint Actuator ha restituito `UP`, il target del backend è risultato attivo in Prometheus e il datasource Grafana ha risposto correttamente.
+
+Sono state controllate tutte le query della dashboard e i nove pannelli hanno mostrato dati senza errori o valori mancanti. La prova dell'alert è stata eseguita creando prima un campione HTTP 500, attendendo lo scrape di Prometheus e generando poi 12 nuove risposte 500. Il valore calcolato ha superato la soglia, la regola è passata da `Normal` a `Firing` ed è tornata automaticamente a `Normal` al termine della finestra di un minuto.
+
+È stato infine eseguito il test Maven con Java 21, profilo `prod` e database MySQL attivo:
+
+```text
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+### Criteri di accettazione soddisfatti
+
+- Le metriche del backend sono esposte tramite Actuator e raccolte da Prometheus.
+- Grafana e Prometheus vengono avviati insieme all'applicazione tramite Docker Compose.
+- La dashboard JVM è configurata automaticamente ed è accessibile dal browser.
+- L'alert controlla l'incremento degli HTTP 500 e usa la soglia richiesta di 10 errori.
+- Il passaggio visivo tra gli stati `Normal` e `Firing` è stato verificato tramite una simulazione reale.
