@@ -144,3 +144,35 @@ BUILD SUCCESS
 - La dashboard JVM è configurata automaticamente ed è accessibile dal browser.
 - L'alert controlla l'incremento degli HTTP 500 e usa la soglia richiesta di 10 errori.
 - Il passaggio visivo tra gli stati `Normal` e `Firing` è stato verificato tramite una simulazione reale.
+
+## Task 4 - Robustezza del codice e automazione dei test
+
+### Obiettivo
+
+Lo scopo della task era verificare in modo automatico il comportamento dei controller e dei service, controllando sia i casi di successo sia i principali flussi di errore.
+
+### Scelte progettuali
+
+Per i controller ho usato `@WebMvcTest` insieme a `MockMvc`, sostituendo i service con mock. Le risposte sono state controllate tramite `jsonPath`, verificando i campi `status`, `data`, `message` e `code` nei casi `200`, `400` e `404`.
+
+I service sono stati testati senza caricare Spring, usando `@ExtendWith(MockitoExtension.class)`, `@Mock` e `@InjectMocks`. Con `verify()` sono state controllate le chiamate a repository e mapper. Nel test di salvataggio dell'autore, `argThat()` verifica che un ID ricevuto dal client venga impostato a `null` prima del salvataggio.
+
+### Verifiche eseguite
+
+I test dei controller coprono la ricerca di autori e libri, le risorse mancanti, l'autore assente durante l'inserimento di un libro e gli errori di validazione. I test dei service verificano ricerca, conversione in DTO, salvataggio ed eliminazione, comprese le operazioni che non devono raggiungere il repository.
+
+La suite completa è stata eseguita con Java 21, profilo `prod` e database MySQL attivo:
+
+```text
+Tests run: 24, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+### Criteri di accettazione soddisfatti
+
+- I controller sono verificati tramite `MockMvc` e `@WebMvcTest`.
+- La struttura JSON standard è controllata nei casi di successo e di errore.
+- I service sono isolati tramite Mockito e non dipendono dal database.
+- Le interazioni con repository e mapper sono controllate tramite `verify()`.
+- L'azzeramento dell'ID dell'autore prima del salvataggio è verificato con `argThat()`.
+- La suite completa non ha rilevato regressioni.
