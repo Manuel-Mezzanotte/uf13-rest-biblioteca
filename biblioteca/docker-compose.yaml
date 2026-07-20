@@ -1,17 +1,52 @@
 services:
   mysql-db:
     image: mysql:9.0
-    container_name: mysql_container
     environment:
-      MYSQL_DATABASE: biblioteca_db
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: "${DB_NAME:-biblioteca_db}"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-root}"
     ports:
-      - "3306:3306" # mappa la porta del container alla stessa porta di codespace
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
     networks:
       - app-network
 
-  # spring-backend:
+  spring-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql-db
+      DB_NAME: "${DB_NAME:-biblioteca_db}"
+      DB_USER: "${DB_USER:-root}"
+      DB_PASSWORD: "${DB_PASSWORD:-root}"
+      LOG_PATH: /app/logs
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - app-network
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  mysql-data:
