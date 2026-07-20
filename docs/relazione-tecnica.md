@@ -61,3 +61,45 @@ BUILD SUCCESS
 - Nei controller non sono presenti blocchi `try-catch` usati per formattare gli errori HTTP.
 - Gli errori interni non espongono stack trace al client.
 - I tipi generici usati dall'handler sono espliciti, ad esempio `Void` e `Map<String, String>`.
+
+## Task 2 - Containerizzazione e profili
+
+### Obiettivo
+
+Lo scopo della task era rendere la compilazione indipendente dalla macchina dello sviluppatore e separare il comportamento dell'applicazione tra sviluppo e produzione.
+
+### Scelte progettuali
+
+Ho organizzato il `Dockerfile` in due stadi. Il primo usa Maven e JDK 21 per compilare il progetto, mentre il secondo usa solamente una JRE 21 minimale e contiene il file `biblioteca.jar`. Il profilo predefinito dell'immagine è `prod`, ma può essere sostituito tramite una variabile d'ambiente.
+
+Nel file `docker-compose.yaml` ho configurato il backend insieme a MySQL. I servizi condividono una rete dedicata e vengono controllati tramite healthcheck. I dati del database sono conservati in un volume Docker, mentre la cartella `logs` del backend è collegata all'host.
+
+Per il logging ho usato i profili `dev` e `prod`:
+
+- in sviluppo i log vengono mostrati in console con livello `TRACE`, comprese le query SQL di Hibernate;
+- in produzione il livello principale è `INFO` e i log vengono scritti nel file `logs/biblioteca.log`;
+- i file di produzione ruotano in base alla data e alla dimensione, con un limite di 10 MB per file, 30 giorni di storico e 1 GB complessivo.
+
+### Verifiche eseguite
+
+Ho eseguito una build Docker senza cache per controllare che la compilazione avvenisse interamente nel container. Nell'immagine finale sono presenti la JRE e il JAR dell'applicazione, mentre Maven, il compilatore Java e i sorgenti non sono inclusi.
+
+Con Docker Compose ho verificato l'avvio di MySQL e del backend, lo stato `healthy` di entrambi i servizi e la risposta `UP` dell'endpoint `/actuator/health`. L'endpoint `/autori` ha restituito correttamente la risposta standard dell'API.
+
+In modalità `prod` i log sono stati scritti nel file montato sull'host senza messaggi `TRACE` o `DEBUG` in console. In modalità `dev` sono stati invece verificati i messaggi `TRACE` e la query SQL generata da Hibernate.
+
+È stato infine eseguito il test Maven presente nel progetto con Java 21:
+
+```text
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+### Criteri di accettazione soddisfatti
+
+- La compilazione viene eseguita nello stadio Docker di build.
+- L'immagine runtime contiene solamente ciò che serve per avviare l'applicazione.
+- I profili `dev` e `prod` applicano livelli e destinazioni di logging differenti.
+- Le query SQL sono tracciate durante lo sviluppo.
+- I log di produzione sono salvati sull'host e ruotano per tempo e dimensione.
+- Backend e database possono essere avviati insieme tramite Docker Compose.
