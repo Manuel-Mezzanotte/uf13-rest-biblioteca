@@ -3,9 +3,11 @@ import {
     apiRequest,
     applyFieldErrors,
     clearFieldErrors,
+    setButtonBusy,
     setFeedback,
     setFormBusy
 } from "./api.js";
+import { confirmDeletion } from "./ui.js";
 
 const form = document.querySelector("#libro-form");
 const authorSelect = document.querySelector("#libro-autore");
@@ -18,6 +20,7 @@ const searchReset = document.querySelector("#libri-search-reset");
 const tableBody = document.querySelector("#libri-table-body");
 const tableWrapper = document.querySelector("#libri-table-wrapper");
 const emptyState = document.querySelector("#libri-empty");
+const loadingState = document.querySelector("#libri-loading");
 const emptyTitle = document.querySelector("#libri-empty-title");
 const emptyCopy = document.querySelector("#libri-empty-copy");
 const countElement = document.querySelector("#libri-count");
@@ -91,6 +94,17 @@ function renderBooks() {
         : "Aggiungi il primo libro usando il modulo.";
 }
 
+function setListLoading(loading, label = "Caricamento…") {
+    loadingState.hidden = !loading;
+
+    if (loading) {
+        loadingState.querySelector("span:last-child").textContent = label;
+        countElement.textContent = label;
+        tableWrapper.hidden = true;
+        emptyState.hidden = true;
+    }
+}
+
 function renderAuthorOptions() {
     const currentValue = authorSelect.value;
     authorSelect.replaceChildren();
@@ -127,12 +141,15 @@ async function loadAuthors() {
 
 async function loadBooks() {
     searchActive = false;
+    setListLoading(true, "Caricamento catalogo…");
 
     try {
         libri = await apiRequest("/libri");
         libri.sort((first, second) => first.titolo.localeCompare(second.titolo, "it"));
+        setListLoading(false);
         renderBooks();
     } catch (error) {
+        setListLoading(false);
         countElement.textContent = "Dati non disponibili";
         setFeedback(feedback, error.message || "Impossibile caricare i libri");
     }
@@ -183,6 +200,8 @@ searchForm.addEventListener("submit", async (event) => {
 
     setFeedback(feedback);
     searchActive = true;
+    setListLoading(true, "Ricerca in corso…");
+    setFormBusy(searchForm, true, "Ricerca…");
 
     const path = searchType.value === "isbn"
         ? `/libri/${encodeURIComponent(query)}`
@@ -196,6 +215,9 @@ searchForm.addEventListener("submit", async (event) => {
         if (!(error instanceof ApiError && error.status === 404)) {
             setFeedback(feedback, error.message || "Impossibile completare la ricerca");
         }
+    } finally {
+        setListLoading(false);
+        setFormBusy(searchForm, false);
     }
 
     renderBooks();
@@ -219,7 +241,18 @@ tableBody.addEventListener("click", async (event) => {
         return;
     }
 
-    button.disabled = true;
+    const libro = libri.find((item) => item.isbn === button.dataset.deleteBook);
+    const bookTitle = libro?.titolo || "questo libro";
+    const confirmed = await confirmDeletion({
+        title: "Eliminare il libro?",
+        message: `“${bookTitle}” verrà rimosso definitivamente dal catalogo.`
+    });
+
+    if (!confirmed) {
+        return;
+    }
+
+    setButtonBusy(button, true, "Eliminazione…");
     setFeedback(feedback);
 
     try {
@@ -230,7 +263,7 @@ tableBody.addEventListener("click", async (event) => {
         await loadBooks();
     } catch (error) {
         setFeedback(feedback, error.message || "Impossibile eliminare il libro");
-        button.disabled = false;
+        setButtonBusy(button, false);
     }
 });
 
@@ -245,6 +278,8 @@ export async function initLibri() {
         await loadAuthors();
         await loadBooks();
     } catch (error) {
+        setListLoading(false);
+        countElement.textContent = "Dati non disponibili";
         setFeedback(feedback, error.message || "Impossibile inizializzare il catalogo");
     }
 }

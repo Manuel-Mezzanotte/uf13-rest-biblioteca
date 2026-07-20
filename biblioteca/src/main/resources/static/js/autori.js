@@ -3,14 +3,17 @@ import {
     apiRequest,
     applyFieldErrors,
     clearFieldErrors,
+    setButtonBusy,
     setFeedback,
     setFormBusy
 } from "./api.js";
+import { confirmDeletion } from "./ui.js";
 
 const form = document.querySelector("#autore-form");
 const tableBody = document.querySelector("#autori-table-body");
 const tableWrapper = document.querySelector("#autori-table-wrapper");
 const emptyState = document.querySelector("#autori-empty");
+const loadingState = document.querySelector("#autori-loading");
 const countElement = document.querySelector("#autori-count");
 const feedback = document.querySelector("#autori-feedback");
 
@@ -56,17 +59,31 @@ function renderAuthors() {
     emptyState.hidden = autori.length > 0;
 }
 
+function setListLoading(loading) {
+    loadingState.hidden = !loading;
+
+    if (loading) {
+        countElement.textContent = "Caricamento…";
+        tableWrapper.hidden = true;
+        emptyState.hidden = true;
+    }
+}
+
 async function loadAuthors() {
+    setListLoading(true);
+
     try {
         autori = await apiRequest("/autori");
         autori.sort((first, second) =>
             `${first.cognome} ${first.nome}`.localeCompare(`${second.cognome} ${second.nome}`, "it")
         );
+        setListLoading(false);
         renderAuthors();
         document.dispatchEvent(new CustomEvent("biblioteca:autori-updated", {
             detail: { autori }
         }));
     } catch (error) {
+        setListLoading(false);
         countElement.textContent = "Dati non disponibili";
         setFeedback(feedback, error.message || "Impossibile caricare gli autori");
     }
@@ -107,7 +124,18 @@ tableBody.addEventListener("click", async (event) => {
         return;
     }
 
-    button.disabled = true;
+    const autore = autori.find((item) => String(item.id) === button.dataset.deleteAuthor);
+    const authorName = autore ? `${autore.nome} ${autore.cognome}` : "questo autore";
+    const confirmed = await confirmDeletion({
+        title: "Eliminare l’autore?",
+        message: `Eliminando ${authorName} verranno rimossi anche gli eventuali libri associati.`
+    });
+
+    if (!confirmed) {
+        return;
+    }
+
+    setButtonBusy(button, true, "Eliminazione…");
     setFeedback(feedback);
 
     try {
@@ -118,7 +146,7 @@ tableBody.addEventListener("click", async (event) => {
         await loadAuthors();
     } catch (error) {
         setFeedback(feedback, error.message || "Impossibile eliminare l’autore");
-        button.disabled = false;
+        setButtonBusy(button, false);
     }
 });
 

@@ -155,6 +155,11 @@
                     </form>
                 </header>
 
+                <div class="loading-state" id="libri-loading" role="status">
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <span>Caricamento catalogo…</span>
+                </div>
+
                 <div class="table-wrapper" id="libri-table-wrapper" hidden>
                     <table class="data-table">
                         <thead>
@@ -170,7 +175,7 @@
                     </table>
                 </div>
 
-                <div class="empty-state empty-state--compact" id="libri-empty">
+                <div class="empty-state empty-state--compact" id="libri-empty" hidden>
                     <span class="empty-state-icon" aria-hidden="true">
                         <svg viewBox="0 0 32 32" focusable="false">
                             <path d="M6 7.5h5v18H6zM13.5 5h5v20.5h-5zM21 8.5h5v17h-5z"/>
@@ -233,6 +238,11 @@
                     </div>
                 </header>
 
+                <div class="loading-state" id="autori-loading" role="status">
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <span>Caricamento autori…</span>
+                </div>
+
                 <div class="table-wrapper" id="autori-table-wrapper" hidden>
                     <table class="data-table">
                         <thead>
@@ -246,7 +256,7 @@
                     </table>
                 </div>
 
-                <div class="empty-state empty-state--compact" id="autori-empty">
+                <div class="empty-state empty-state--compact" id="autori-empty" hidden>
                     <span class="empty-state-icon" aria-hidden="true">
                         <svg viewBox="0 0 32 32" focusable="false">
                             <circle cx="16" cy="11" r="5"/>
@@ -260,6 +270,30 @@
         </div>
     </section>
 </main>
+
+<dialog class="confirmation-dialog" id="confirmation-dialog"
+        aria-labelledby="confirmation-title" aria-describedby="confirmation-message">
+    <form class="confirmation-card" method="dialog">
+        <span class="confirmation-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/>
+            </svg>
+        </span>
+        <div>
+            <h2 id="confirmation-title">Conferma eliminazione</h2>
+            <p id="confirmation-message"></p>
+        </div>
+        <div class="confirmation-actions">
+            <button class="button button--secondary" id="confirmation-cancel" type="submit" value="cancel">
+                Annulla
+            </button>
+            <button class="button button--danger button--danger-solid" id="confirmation-submit"
+                    type="submit" value="confirm">
+                Elimina
+            </button>
+        </div>
+    </form>
+</dialog>
 
 <footer class="site-footer">
     <p>Biblioteca · Applicazione Spring Boot</p>

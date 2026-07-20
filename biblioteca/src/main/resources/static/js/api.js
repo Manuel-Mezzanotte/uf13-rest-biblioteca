@@ -7,6 +7,10 @@ export class ApiError extends Error {
     }
 }
 
+const feedbackTimers = new WeakMap();
+const buttonStates = new WeakMap();
+const controlStates = new WeakMap();
+
 export async function apiRequest(path, options = {}) {
     const response = await fetch(path, {
         cache: "no-store",
@@ -63,14 +67,83 @@ export function applyFieldErrors(form, details) {
 }
 
 export function setFeedback(element, message = "", type = "error") {
+    const activeTimer = feedbackTimers.get(element);
+
+    if (activeTimer) {
+        window.clearTimeout(activeTimer);
+        feedbackTimers.delete(element);
+    }
+
     element.textContent = message;
-    element.dataset.type = type;
     element.hidden = !message;
+
+    if (!message) {
+        element.removeAttribute("data-type");
+        return;
+    }
+
+    element.dataset.type = type;
+
+    if (type === "success") {
+        const timer = window.setTimeout(() => {
+            element.hidden = true;
+            element.textContent = "";
+            element.removeAttribute("data-type");
+            feedbackTimers.delete(element);
+        }, 4000);
+        feedbackTimers.set(element, timer);
+    }
 }
 
-export function setFormBusy(form, busy) {
+export function setButtonBusy(button, busy, busyLabel = "Operazione in corso…") {
+    if (busy) {
+        if (!buttonStates.has(button)) {
+            buttonStates.set(button, {
+                label: button.textContent.trim(),
+                disabled: button.disabled
+            });
+        }
+
+        button.textContent = busyLabel;
+        button.disabled = true;
+        button.classList.add("is-loading");
+        button.setAttribute("aria-busy", "true");
+        return;
+    }
+
+    const previousState = buttonStates.get(button);
+
+    if (!previousState) {
+        return;
+    }
+
+    button.textContent = previousState.label;
+    button.disabled = previousState.disabled;
+    button.classList.remove("is-loading");
+    button.removeAttribute("aria-busy");
+    buttonStates.delete(button);
+}
+
+export function setFormBusy(form, busy, busyLabel = "Salvataggio…") {
     form.setAttribute("aria-busy", String(busy));
-    form.querySelectorAll("button, input, select").forEach((control) => {
-        control.disabled = busy;
+    const submitButton = form.querySelector("button[type='submit']");
+    const controls = [...form.querySelectorAll("input, select, button")]
+        .filter((control) => control !== submitButton);
+
+    if (busy) {
+        controls.forEach((control) => {
+            controlStates.set(control, control.disabled);
+            control.disabled = true;
+        });
+        setButtonBusy(submitButton, true, busyLabel);
+        return;
+    }
+
+    controls.forEach((control) => {
+        if (controlStates.has(control)) {
+            control.disabled = controlStates.get(control);
+            controlStates.delete(control);
+        }
     });
+    setButtonBusy(submitButton, false);
 }
