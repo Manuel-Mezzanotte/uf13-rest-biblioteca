@@ -176,3 +176,26 @@ BUILD SUCCESS
 - Le interazioni con repository e mapper sono controllate tramite `verify()`.
 - L'azzeramento dell'ID dell'autore prima del salvataggio è verificato con `argThat()`.
 - La suite completa non ha rilevato regressioni.
+
+## Frontend web
+
+### Obiettivo
+
+Per rendere più semplice l'utilizzo delle API ho aggiunto una piccola interfaccia web per la gestione della biblioteca.
+
+### Scelte progettuali
+
+Il frontend è realizzato con HTML, CSS e JavaScript ed è servito direttamente da Spring Boot. In questo modo non richiede un secondo progetto o un server Node e comunica con le API sullo stesso indirizzo.
+
+L'interfaccia permette di visualizzare, aggiungere ed eliminare autori e libri. Per i libri sono disponibili anche la ricerca per titolo e per ISBN. Sono presenti messaggi di errore e conferma, indicazioni durante il caricamento, stati vuoti e una richiesta di conferma prima delle eliminazioni. Il layout è adattato anche agli schermi piccoli.
+
+### Verifiche eseguite
+
+Ho verificato il frontend nel browser sia in formato desktop sia mobile, provando inserimento, ricerca, validazione, annullamento e conferma delle eliminazioni. Al termine della prova i dati temporanei sono stati rimossi e non sono comparsi errori nella console del browser.
+
+Il progetto è stato ricostruito con Docker e tutti i servizi sono risultati `healthy`. La suite completa, eseguita con Java 21, profilo `dev` e MySQL di Docker Compose, ha dato il seguente risultato:
+
+```text
+Tests run: 24, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
